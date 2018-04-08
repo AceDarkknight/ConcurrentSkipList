@@ -84,6 +84,9 @@ func (s *skipList) searchWithPreviousNodes(index uint64) ([]*Node, *Node) {
 	return previousNodes, currentNode
 }
 
+// searchWithoutPreviousNodes will return the node whose index is given index.
+// If can not find the given index, return nil.
+// This function is faster than searchWithPreviousNodes and it used to only searching index.
 func (s *skipList) searchWithoutPreviousNodes(index uint64) *Node {
 	currentNode := s.head
 
@@ -158,6 +161,7 @@ func (s *skipList) delete(index uint64) {
 	}
 }
 
+// getLength will return the length of skip list.
 func (s *skipList) getLength() int32 {
 	return atomic.LoadInt32(&s.length)
 }

@@ -23,7 +23,7 @@ func init() {
 	shardIndexes[0] = step
 	for i := SHARDS - 1; i > 0; i-- {
 		var t uint64 = math.MaxUint64
-		for j := SHARDS - 1; j < i; i++ {
+		for j := SHARDS - 1; j > i; j-- {
 			t -= step
 		}
 
