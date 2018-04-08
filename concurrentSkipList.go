@@ -1,11 +1,10 @@
 package ConcurrentSkipList
 
 import (
-	"github.com/OneOfOne/xxhash"
 	"math"
-	"math/rand"
-	"sync"
 	"sync/atomic"
+
+	"github.com/OneOfOne/xxhash"
 )
 
 // Comes from redis's implementation.
@@ -32,53 +31,10 @@ func init() {
 	}
 }
 
-type Node struct {
-	index        uint64
-	value        interface{}
-	previousNode *Node
-	nextNodes    []*Node
-}
-
-func NewNode(index uint64, value interface{}, level int) *Node {
-	if level <= 0 || level > MAX_LEVEL {
-		level = MAX_LEVEL
-	}
-
-	return &Node{
-		index:     index,
-		value:     value,
-		nextNodes: make([]*Node, level),
-	}
-}
-
-func (n *Node) Index() uint64 {
-	return n.index
-}
-
-func (n *Node) Value() interface{} {
-	return n.value
-}
-
-func (n *Node) Next() *Node {
-	return n.nextNodes[0]
-}
-
-func (n *Node) Previous() *Node {
-	return n.previousNode
-}
-
 type ConcurrentSkipList struct {
 	skipLists []*skipList
 	length    int32
-}
-
-type skipList struct {
-	level  int
-	length int32
-	head   *Node
-	tail   *Node
-	max    *Node
-	mutex  sync.RWMutex
+	level     int
 }
 
 func NewConcurrentSkipList(level int) *ConcurrentSkipList {
@@ -88,65 +44,64 @@ func NewConcurrentSkipList(level int) *ConcurrentSkipList {
 
 	skipLists := make([]*skipList, SHARDS)
 	for i := 0; i < SHARDS; i++ {
-		head := NewNode(0, nil, level)
-		tail := NewNode(math.MaxUint64, nil, level)
-		for i := 0; i < len(head.nextNodes); i++ {
-			head.nextNodes[i] = tail
-		}
-
-		tail.previousNode = head
-		head.previousNode = nil
-
-		skipLists[i] = &skipList{
-			level:  level,
-			length: 0,
-			head:   head,
-			tail:   tail,
-		}
+		skipLists[i] = newSkipList(level)
 	}
 
 	return &ConcurrentSkipList{
 		skipLists: skipLists,
+		length:    0,
+		level:     level,
 	}
 }
 
 // Level will return the level of skip list.
 func (s *ConcurrentSkipList) Level() int {
-	return s.skipLists[0].level
+	return s.level
 }
 
 // Length will return the length of skip list.
 func (s *ConcurrentSkipList) Length() int32 {
 	var length int32 = 0
 	for _, sl := range s.skipLists {
-		length += atomic.LoadInt32(&sl.length)
+		length += sl.getLength()
 	}
 
 	return length
 }
 
-func (s *ConcurrentSkipList) Search(index uint64) *Node {
+// Search will search the skip list with the given index.
+// If the index exists, return the node and true, otherwise return nil and false.
+func (s *ConcurrentSkipList) Search(index uint64) (*Node, bool) {
 	sl := s.skipLists[getShardIndex(index)]
 	if atomic.LoadInt32(&sl.length) == 0 {
-		return nil
+		return nil, false
 	}
 
-	currentNode := sl.head
-	for l := sl.level - 1; l >= 0; l-- {
-		for currentNode.nextNodes[l] != sl.tail && currentNode.index < index {
-			currentNode = currentNode.nextNodes[l]
-		}
-	}
-
-	if currentNode == sl.tail || currentNode.index > index {
-		return nil
-	} else if currentNode.index == index {
-		return currentNode
-	} else {
-		return nil
-	}
+	result := sl.searchWithoutPreviousNodes(index)
+	return result, result != nil
 }
 
+// Insert will insert a node into skip list. If skip has these this index, overwrite the value, otherwise add it.
+func (s *ConcurrentSkipList) Insert(index uint64, value interface{}) {
+	// Ignore nil value.
+	if value == nil {
+		return
+	}
+
+	sl := s.skipLists[getShardIndex(index)]
+	sl.insert(index, value)
+}
+
+func (s *ConcurrentSkipList) Delete(index uint64) {
+	sl := s.skipLists[getShardIndex(index)]
+	if atomic.LoadInt32(&sl.length) == 0 {
+		return
+	}
+
+	sl.delete(index)
+}
+
+// Locate which shard the given index belong to.
 func getShardIndex(index uint64) int {
 	result := -1
 	for i, t := range shardIndexes {
@@ -157,17 +112,6 @@ func getShardIndex(index uint64) int {
 	}
 
 	return result
-}
-
-// randomLevel will generate and random level that level > 0 and level < skip list's level
-// This comes from redis's implementation.
-func (s *skipList) randomLevel() int {
-	level := 1
-	for rand.Float64() < PROBABILITY && level < s.level {
-		level++
-	}
-
-	return level
 }
 
 // Hash will calculate the input's hash value using xxHash algorithm.
