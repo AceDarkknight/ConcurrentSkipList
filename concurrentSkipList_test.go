@@ -3,6 +3,9 @@ package ConcurrentSkipList
 import (
 	"fmt"
 	"math"
+	"sort"
+	"strconv"
+	"sync"
 	"testing"
 )
 
@@ -305,6 +308,43 @@ func TestConcurrentSkipList_Delete_SingleThread(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got, ok := skipList.Search(tt.args.index); ok || got != nil {
 				t.Errorf("Search() = %v, want = %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestConcurrentSkipList_Insert_Concurrent(t *testing.T) {
+	skipList := NewConcurrentSkipList(10)
+	indexes := make([]uint64, 0)
+	var wg sync.WaitGroup
+	for i := 0; i < 1000; i++ {
+		index := Hash([]byte(strconv.Itoa(i)))
+		indexes = append(indexes, index)
+	}
+
+	sort.Slice(indexes, func(i, j int) bool {
+		return indexes[i] < indexes[j]
+	})
+
+	for _, index := range indexes {
+		wg.Add(1)
+		go func(i uint64, v interface{}) {
+			skipList.Insert(i, v)
+			wg.Done()
+		}(index, index)
+	}
+
+	wg.Wait()
+	t.Run("test length", func(t *testing.T) {
+		if skipList.Length() != 1000 {
+			t.Errorf("skip list error length are not correct")
+		}
+	})
+
+	for i, index := range indexes {
+		t.Run(fmt.Sprintf("test %d", i+1), func(t *testing.T) {
+			if got, ok := skipList.Search(index); !ok || got.Index() != index || got.Value() != index {
+				t.Errorf("Search() = %v, want = %v", got, index)
 			}
 		})
 	}
