@@ -6,7 +6,7 @@ type Node struct {
 	nextNodes []*Node
 }
 
-func NewNode(index uint64, value interface{}, level int) *Node {
+func newNode(index uint64, value interface{}, level int) *Node {
 	if level <= 0 || level > MAX_LEVEL {
 		level = MAX_LEVEL
 	}
@@ -24,8 +24,4 @@ func (n *Node) Index() uint64 {
 
 func (n *Node) Value() interface{} {
 	return n.value
-}
-
-func (n *Node) Next() *Node {
-	return n.nextNodes[0]
 }

@@ -1,3 +1,6 @@
+/*
+Package ConcurrentSkipList provide an implementation of skip list. It's thread-safe in concurrency and high performance.
+*/
 package ConcurrentSkipList
 
 import (
@@ -16,18 +19,17 @@ const (
 	SHARDS      = 32
 )
 
+// shardIndex is used to indicate which shard a given index belong to.
 var shardIndexes = make([]uint64, SHARDS)
 
+// init will initialize the shardIndexes.
 func init() {
-	var step uint64 = 1 << 59 // 2^64/32
-	shardIndexes[0] = step
-	for i := SHARDS - 1; i > 0; i-- {
-		var t uint64 = math.MaxUint64
-		for j := SHARDS - 1; j > i; j-- {
-			t -= step
-		}
+	var step uint64 = 1 << 59 // 2^64/SHARDS
+	var t uint64 = math.MaxUint64
 
+	for i := SHARDS - 1; i >= 0; i-- {
 		shardIndexes[i] = t
+		t -= step
 	}
 }
 
@@ -37,6 +39,13 @@ type ConcurrentSkipList struct {
 	level     int
 }
 
+// NewConcurrentSkipList will create a new concurrent skip list with given level.
+// Level must between 1 to 32. If not, the level will set as 32.
+// To determine the level, you can see the paper ftp://ftp.cs.umd.edu/pub/skipLists/skiplists.pdf.
+// A simple way to determine the level is L(N) = log(1/PROBABILITY)(N).
+// N is the count of the skip list which you can estimate. PROBABILITY is 0.25 in this case.
+// For example, if you expect the skip list contains 10000000 elements, then N = 10000000, L(N) ≈ 12.
+// After initialization, the head field's level equal to level parameter and point to tail field.
 func NewConcurrentSkipList(level int) *ConcurrentSkipList {
 	if level <= 0 || level > MAX_LEVEL {
 		level = MAX_LEVEL
@@ -70,7 +79,7 @@ func (s *ConcurrentSkipList) Length() int32 {
 }
 
 // Search will search the skip list with the given index.
-// If the index exists, return the node and true, otherwise return nil and false.
+// If the index exists, return the value and true, otherwise return nil and false.
 func (s *ConcurrentSkipList) Search(index uint64) (*Node, bool) {
 	sl := s.skipLists[getShardIndex(index)]
 	if atomic.LoadInt32(&sl.length) == 0 {
@@ -81,7 +90,7 @@ func (s *ConcurrentSkipList) Search(index uint64) (*Node, bool) {
 	return result, result != nil
 }
 
-// Insert will insert a node into skip list. If skip has these this index, overwrite the value, otherwise add it.
+// Insert will insert a value into skip list. If skip has these this index, overwrite the value, otherwise add it.
 func (s *ConcurrentSkipList) Insert(index uint64, value interface{}) {
 	// Ignore nil value.
 	if value == nil {
@@ -92,6 +101,7 @@ func (s *ConcurrentSkipList) Insert(index uint64, value interface{}) {
 	sl.insert(index, value)
 }
 
+// Delete the node with the given index.
 func (s *ConcurrentSkipList) Delete(index uint64) {
 	sl := s.skipLists[getShardIndex(index)]
 	if atomic.LoadInt32(&sl.length) == 0 {
@@ -99,6 +109,24 @@ func (s *ConcurrentSkipList) Delete(index uint64) {
 	}
 
 	sl.delete(index)
+}
+
+// ForEach will create a snapshot first. Then iterate each node in snapshot and do the function f().
+// If skip list is inserted or deleted while iterating, the node in snapshot will not change.
+// The performance is not very high.
+func (s *ConcurrentSkipList) ForEach(f func(node *Node) bool) {
+	for _, sl := range s.skipLists {
+		if sl.getLength() == 0 {
+			continue
+		}
+
+		nodes := sl.snapshot()
+		for _, node := range nodes {
+			if !f(node) {
+				break
+			}
+		}
+	}
 }
 
 // Locate which shard the given index belong to.
