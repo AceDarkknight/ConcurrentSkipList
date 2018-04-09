@@ -39,10 +39,6 @@ func (s *skipList) searchWithPreviousNodes(index uint64) ([]*Node, *Node) {
 	// fmt.Printf("start doSearch:%v\n", index)
 	currentNode := s.head
 
-	// Lock and unlock.
-	s.mutex.RLock()
-	defer s.mutex.RUnlock()
-
 	// Iterate from top level to bottom level.
 	for l := s.level - 1; l >= 0; l-- {
 		// Iterate value util value's index is >= given index.
@@ -105,11 +101,11 @@ func (s *skipList) searchWithoutPreviousNodes(index uint64) *Node {
 // insert will insert a value into skip list and update the length.
 // If skip has these this index, overwrite the value, otherwise add it.
 func (s *skipList) insert(index uint64, value interface{}) {
-	previousNodes, currentNode := s.searchWithPreviousNodes(index)
-
 	// Write lock and unlock.
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
+
+	previousNodes, currentNode := s.searchWithPreviousNodes(index)
 
 	if currentNode != s.head && currentNode.index == index {
 		currentNode.value = value
@@ -134,10 +130,11 @@ func (s *skipList) insert(index uint64, value interface{}) {
 // delete will find the index is existed or not firstly.
 // If existed, delete it and update length, otherwise do nothing.
 func (s *skipList) delete(index uint64) {
-	previousNodes, currentNode := s.searchWithPreviousNodes(index)
-
+	// Write lock and unlock.
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
+
+	previousNodes, currentNode := s.searchWithPreviousNodes(index)
 
 	// If skip list length is 0 or could not find value with the given index.
 	if currentNode != s.head && currentNode.index == index {

@@ -7,9 +7,10 @@ import (
 	"strconv"
 	"sync"
 	"testing"
+	"time"
 )
 
-func TestConcurrentSkipList_Search_SingleThread(t *testing.T) {
+func TestConcurrentSkipList_Search(t *testing.T) {
 	concurrentSkipList1 := NewConcurrentSkipList(16)
 
 	type args struct {
@@ -87,7 +88,7 @@ func TestConcurrentSkipList_Search_SingleThread(t *testing.T) {
 	}
 }
 
-func TestConcurrentSkipList_Insert_SingleThread(t *testing.T) {
+func TestConcurrentSkipList_Insert(t *testing.T) {
 	skipList := NewConcurrentSkipList(8)
 	type args struct {
 		index uint64
@@ -129,8 +130,8 @@ func TestConcurrentSkipList_Insert_SingleThread(t *testing.T) {
 	skipList.Insert(uint64(2018), 111)
 
 	t.Run("test Length1", func(t *testing.T) {
-		if skipList.Length() != 11 {
-			t.Errorf("skip list error length is not correct")
+		if length := skipList.Length(); length != 11 {
+			t.Errorf("skip list's length is not correct, got %d", length)
 		}
 	})
 
@@ -216,7 +217,7 @@ func TestConcurrentSkipList_Insert_SingleThread(t *testing.T) {
 	})
 }
 
-func TestConcurrentSkipList_Delete_SingleThread(t *testing.T) {
+func TestConcurrentSkipList_Delete(t *testing.T) {
 	skipList := NewConcurrentSkipList(16)
 	skipList.Delete(uint64(1))
 	type args struct {
@@ -225,13 +226,13 @@ func TestConcurrentSkipList_Delete_SingleThread(t *testing.T) {
 
 	t.Run("test level", func(t *testing.T) {
 		if skipList.Level() != 16 {
-			t.Errorf("skip list level is not correct")
+			t.Errorf("skip list's level is not correct")
 		}
 	})
 
 	t.Run("test Length0", func(t *testing.T) {
-		if skipList.Length() != 0 {
-			t.Errorf("skip list error length are not correct")
+		if length := skipList.Length(); length != 0 {
+			t.Errorf("skip list's length is not correct, got %d", length)
 		}
 	})
 
@@ -256,8 +257,8 @@ func TestConcurrentSkipList_Delete_SingleThread(t *testing.T) {
 	}
 
 	t.Run("test Length1", func(t *testing.T) {
-		if skipList.Length() != 11 {
-			t.Errorf("skip list error length is not correct")
+		if length := skipList.Length(); length != 11 {
+			t.Errorf("skip list's length is not correct, got %d", length)
 		}
 	})
 
@@ -267,8 +268,8 @@ func TestConcurrentSkipList_Delete_SingleThread(t *testing.T) {
 	skipList.Delete(uint64(11))
 
 	t.Run("test Length1", func(t *testing.T) {
-		if skipList.Length() != 9 {
-			t.Errorf("skip list error length is not correct")
+		if length := skipList.Length(); length != 9 {
+			t.Errorf("skip list's length is not correct, got %d", length)
 		}
 	})
 
@@ -313,18 +314,15 @@ func TestConcurrentSkipList_Delete_SingleThread(t *testing.T) {
 	}
 }
 
-func TestConcurrentSkipList_Insert_Concurrent(t *testing.T) {
+func TestConcurrentSkipList_Insert_Parallel(t *testing.T) {
 	skipList := NewConcurrentSkipList(10)
 	indexes := make([]uint64, 0)
+	count := 10000
 	var wg sync.WaitGroup
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < count; i++ {
 		index := Hash([]byte(strconv.Itoa(i)))
 		indexes = append(indexes, index)
 	}
-
-	sort.Slice(indexes, func(i, j int) bool {
-		return indexes[i] < indexes[j]
-	})
 
 	for _, index := range indexes {
 		wg.Add(1)
@@ -335,9 +333,13 @@ func TestConcurrentSkipList_Insert_Concurrent(t *testing.T) {
 	}
 
 	wg.Wait()
+	sort.Slice(indexes, func(i, j int) bool {
+		return indexes[i] < indexes[j]
+	})
+
 	t.Run("test length", func(t *testing.T) {
-		if skipList.Length() != 1000 {
-			t.Errorf("skip list error length are not correct")
+		if length := skipList.Length(); length != int32(count) {
+			t.Errorf("skip list's length are not correct, got %d", length)
 		}
 	})
 
@@ -348,6 +350,117 @@ func TestConcurrentSkipList_Insert_Concurrent(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestConcurrentSkipList_Delete_Parallel(t *testing.T) {
+	skipList := NewConcurrentSkipList(10)
+	indexes := make([]uint64, 0)
+	count := 10000
+	var wg sync.WaitGroup
+	for i := 0; i < count; i++ {
+		index := Hash([]byte(strconv.Itoa(i)))
+		indexes = append(indexes, index)
+	}
+
+	for _, index := range indexes {
+		wg.Add(1)
+		go func(i uint64, v interface{}) {
+			skipList.Insert(i, v)
+			wg.Done()
+		}(index, index)
+	}
+
+	wg.Wait()
+	t.Run("test length1", func(t *testing.T) {
+		if length := skipList.Length(); length != int32(count) {
+			t.Errorf("skip list's length are not correct, got %d", length)
+		}
+	})
+
+	sort.Slice(indexes, func(i, j int) bool {
+		return indexes[i] < indexes[j]
+	})
+	for _, index := range indexes {
+		wg.Add(1)
+		go func(i uint64, v interface{}) {
+			skipList.Delete(i)
+			wg.Done()
+		}(index, index)
+	}
+	for _, index := range indexes {
+		wg.Add(1)
+		go func(i uint64, v interface{}) {
+			skipList.Delete(i)
+			wg.Done()
+		}(index, index)
+	}
+	wg.Wait()
+
+	t.Run("test length2", func(t *testing.T) {
+		if length := skipList.Length(); length != 0 {
+			t.Errorf("skip list's length are not correct, got %d", length)
+		}
+	})
+}
+
+func TestConcurrentSkipList_ForEach_Parallel(t *testing.T) {
+	skipList := NewConcurrentSkipList(10)
+	indexes := make([]uint64, 0)
+	count := 10000
+	var wg sync.WaitGroup
+	for i := 0; i < count; i++ {
+		//index := Hash([]byte(strconv.Itoa(i)))
+		indexes = append(indexes, uint64(i))
+	}
+
+	for _, index := range indexes {
+		wg.Add(1)
+		go func(i uint64, v interface{}) {
+			skipList.Insert(i, v)
+			wg.Done()
+		}(index, index)
+	}
+
+	wg.Wait()
+	go func() {
+		i := 0
+		skipList.ForEach(func(node *Node) bool {
+			i++
+			return true
+		})
+
+		t.Run("test1", func(t *testing.T) {
+			if i != count {
+				t.Errorf("skip list's ForEach() occurs error, node count got %d,want %d", i, count)
+			}
+		})
+	}()
+
+	sort.Slice(indexes, func(i, j int) bool {
+		return indexes[i] < indexes[j]
+	})
+
+	time.Sleep(time.Second)
+	for _, index := range indexes {
+		wg.Add(1)
+		go func(i uint64, v interface{}) {
+			skipList.Delete(i)
+			wg.Done()
+		}(index, index)
+	}
+	wg.Wait()
+
+	i := 0
+	skipList.ForEach(func(node *Node) bool {
+		i++
+		return true
+	})
+
+	t.Run("test1", func(t *testing.T) {
+		if i != 0 {
+			t.Errorf("skip list's ForEach() occurs error, node count got %d,want %d", i, count)
+		}
+	})
 }
 
 func TestHash(t *testing.T) {

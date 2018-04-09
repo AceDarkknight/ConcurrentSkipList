@@ -4,26 +4,25 @@ import (
 	"math/rand"
 	"strconv"
 	"testing"
-	"time"
 )
 
 func BenchmarkSkipList_Insert_Ordered(b *testing.B) {
-	skipList := NewConcurrentSkipList(10)
+	skipList := NewConcurrentSkipList(12)
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		t := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(100000)
-		_ = Hash([]byte(strconv.Itoa(t)))
-		skipList.Insert(uint64(i), i)
+		t := rand.Intn(b.N)
+		index := Hash([]byte(strconv.Itoa(t)))
+		skipList.Insert(uint64(i), index)
 	}
 }
 
 func BenchmarkSkipList_Insert_Randomly(b *testing.B) {
-	skipList := NewConcurrentSkipList(10)
+	skipList := NewConcurrentSkipList(12)
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		t := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(100000)
+		t := rand.Intn(b.N)
 		index := Hash([]byte(strconv.Itoa(t)))
-		skipList.Insert(index, i)
+		skipList.Insert(index, index)
 	}
 }
 
@@ -36,7 +35,7 @@ func BenchmarkSkipList_Search_100000Elements(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		t := rand.Intn(100000)
+		t := rand.Intn(b.N)
 		index := Hash([]byte(strconv.Itoa(t)))
 		skipList.Search(index)
 	}
@@ -51,7 +50,7 @@ func BenchmarkSkipList_Search_1000000Elements(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		t := rand.Intn(1000000)
+		t := rand.Intn(b.N)
 		index := Hash([]byte(strconv.Itoa(t)))
 		skipList.Search(index)
 	}
@@ -66,7 +65,7 @@ func BenchmarkSkipList_Search_10000000Elements(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		t := rand.Intn(10000000)
+		t := rand.Intn(b.N)
 		index := Hash([]byte(strconv.Itoa(t)))
 		skipList.Search(index)
 	}
@@ -81,7 +80,7 @@ func BenchmarkSkipList_Search_12Level(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		t := rand.Intn(10000000)
+		t := rand.Intn(b.N)
 		index := Hash([]byte(strconv.Itoa(t)))
 		skipList.Search(index)
 	}
@@ -96,8 +95,20 @@ func BenchmarkSkipList_Search_24Level(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		t := rand.Intn(10000000)
+		t := rand.Intn(b.N)
 		index := Hash([]byte(strconv.Itoa(t)))
 		skipList.Search(index)
 	}
+}
+
+func BenchmarkConcurrentSkipList_Insert_Parallel(b *testing.B) {
+	skipList := NewConcurrentSkipList(12)
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			skipList.Insert(uint64(rand.Intn(b.N)), 0)
+		}
+	})
 }
