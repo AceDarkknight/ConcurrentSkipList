@@ -111,9 +111,10 @@ func (s *ConcurrentSkipList) Delete(index uint64) {
 	sl.delete(index)
 }
 
-// ForEach will create a snapshot first. Then iterate each node in snapshot and do the function f().
+// ForEach will create a snapshot first shard by shard. Then iterate each node in snapshot and do the function f().
+// If f() return false, stop iterating and return.
 // If skip list is inserted or deleted while iterating, the node in snapshot will not change.
-// The performance is not very high.
+// The performance is not very high and the snapshot with be stored in memory.
 func (s *ConcurrentSkipList) ForEach(f func(node *Node) bool) {
 	for _, sl := range s.skipLists {
 		if sl.getLength() == 0 {
@@ -121,10 +122,16 @@ func (s *ConcurrentSkipList) ForEach(f func(node *Node) bool) {
 		}
 
 		nodes := sl.snapshot()
+		stop := false
 		for _, node := range nodes {
 			if !f(node) {
+				stop = true
 				break
 			}
+		}
+
+		if stop {
+			break
 		}
 	}
 }

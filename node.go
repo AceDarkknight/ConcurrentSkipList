@@ -7,10 +7,6 @@ type Node struct {
 }
 
 func newNode(index uint64, value interface{}, level int) *Node {
-	if level <= 0 || level > MAX_LEVEL {
-		level = MAX_LEVEL
-	}
-
 	return &Node{
 		index:     index,
 		value:     value,

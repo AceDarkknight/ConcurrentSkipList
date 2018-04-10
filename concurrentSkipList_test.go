@@ -10,6 +10,32 @@ import (
 	"time"
 )
 
+func TestNewConcurrentSkipList(t *testing.T) {
+	type args struct {
+		level int
+	}
+	type want struct {
+		length int32
+		level  int
+	}
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{"test1", args{-1}, want{0, 32}},
+		{"test2", args{10}, want{0, 10}},
+		{"test3", args{64}, want{0, 32}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := NewConcurrentSkipList(tt.args.level); got.Level() != tt.want.level || got.Length() != tt.want.length {
+				t.Errorf("NewConcurrentSkipList() = %#v, want %#v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestConcurrentSkipList_Search(t *testing.T) {
 	concurrentSkipList1 := NewConcurrentSkipList(16)
 
@@ -314,6 +340,32 @@ func TestConcurrentSkipList_Delete(t *testing.T) {
 	}
 }
 
+func TestConcurrentSkipList_ForEach(t *testing.T) {
+	skipList := NewConcurrentSkipList(10)
+	indexes := make([]uint64, 0)
+	count := 10000
+	for i := 0; i < count; i++ {
+		index := Hash([]byte(strconv.Itoa(i)))
+		indexes = append(indexes, index)
+	}
+
+	for i, index := range indexes {
+		skipList.Insert(index, i)
+	}
+
+	i := -1
+	skipList.ForEach(func(node *Node) bool {
+		i++
+		return false
+	})
+
+	t.Run("test", func(t *testing.T) {
+		if i != 0 {
+			t.Errorf("ForEach() occur error. got %d", i)
+		}
+	})
+}
+
 func TestConcurrentSkipList_Insert_Parallel(t *testing.T) {
 	skipList := NewConcurrentSkipList(10)
 	indexes := make([]uint64, 0)
@@ -409,7 +461,6 @@ func TestConcurrentSkipList_ForEach_Parallel(t *testing.T) {
 	count := 10000
 	var wg sync.WaitGroup
 	for i := 0; i < count; i++ {
-		//index := Hash([]byte(strconv.Itoa(i)))
 		indexes = append(indexes, uint64(i))
 	}
 
