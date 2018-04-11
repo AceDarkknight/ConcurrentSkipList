@@ -12,9 +12,8 @@ func BenchmarkConcurrentSkipList_Insert_Ordered(b *testing.B) {
 	skipList := NewConcurrentSkipList(12)
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		t := rand.Intn(b.N)
-		index := Hash([]byte(strconv.Itoa(t)))
-		skipList.Insert(uint64(i), index)
+		_ = Hash([]byte(strconv.Itoa(i)))
+		skipList.Insert(uint64(i), i)
 	}
 }
 
@@ -22,14 +21,13 @@ func BenchmarkConcurrentSkipList_Insert_Randomly(b *testing.B) {
 	skipList := NewConcurrentSkipList(12)
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		t := rand.Intn(b.N)
-		index := Hash([]byte(strconv.Itoa(t)))
+		index := Hash([]byte(strconv.Itoa(i)))
 		skipList.Insert(index, index)
 	}
 }
 
 func BenchmarkConcurrentSkipList_Search_100000Elements(b *testing.B) {
-	skipList := NewConcurrentSkipList(32)
+	skipList := NewConcurrentSkipList(12)
 	for i := 0; i < 100000; i++ {
 		skipList.Insert(uint64(i), i)
 	}
@@ -44,7 +42,7 @@ func BenchmarkConcurrentSkipList_Search_100000Elements(b *testing.B) {
 }
 
 func BenchmarkConcurrentSkipList_Search_1000000Elements(b *testing.B) {
-	skipList := NewConcurrentSkipList(32)
+	skipList := NewConcurrentSkipList(12)
 	for i := 0; i < 1000000; i++ {
 		skipList.Insert(uint64(i), i)
 	}
@@ -59,7 +57,7 @@ func BenchmarkConcurrentSkipList_Search_1000000Elements(b *testing.B) {
 }
 
 func BenchmarkConcurrentSkipList_Search_10000000Elements(b *testing.B) {
-	skipList := NewConcurrentSkipList(32)
+	skipList := NewConcurrentSkipList(12)
 	for i := 0; i < 10000000; i++ {
 		skipList.Insert(uint64(i), i)
 	}

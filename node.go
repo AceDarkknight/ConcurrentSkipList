@@ -10,7 +10,7 @@ func newNode(index uint64, value interface{}, level int) *Node {
 	return &Node{
 		index:     index,
 		value:     value,
-		nextNodes: make([]*Node, level),
+		nextNodes: make([]*Node, level, level),
 	}
 }
 
