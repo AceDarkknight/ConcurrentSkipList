@@ -1,5 +1,7 @@
 # ConcurrentSkipList
-A light, high performance, concurrent, thread-safe skip list implementation written in Golang.
+[![Build Status](https://travis-ci.org/AceDarkknight/ConcurrentSkipList.svg?branch=master)](https://travis-ci.org/AceDarkknight/ConcurrentSkipList)
+
+A light, high-performance, concurrent, thread-safe skip list implementation written in Golang.
 
 ## Getting Start
 - **Import package**
