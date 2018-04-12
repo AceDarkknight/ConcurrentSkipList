@@ -514,6 +514,96 @@ func TestConcurrentSkipList_ForEach_Parallel(t *testing.T) {
 	})
 }
 
+func TestConcurrentSkipList_Length(t *testing.T) {
+	skipList := NewConcurrentSkipList(32)
+	for i := 0; i < 10000000; i++ {
+		skipList.Insert(uint64(i), i)
+	}
+}
+
+func TestConcurrentSkipList_Level(t *testing.T) {
+	skipList := NewConcurrentSkipList(16)
+	for i := 0; i < 10000000; i++ {
+		index := Hash([]byte(strconv.Itoa(i)))
+		skipList.Insert(index, i)
+	}
+
+	length := skipList.Length()
+	levels := make([]int, 17)
+	for _, sl := range skipList.skipLists {
+		if sl.getLength() == 0 {
+			continue
+		}
+
+		currentNode := sl.head
+		for currentNode.nextNodes[0] != sl.tail {
+			levels[len(currentNode.nextNodes)]++
+			currentNode = currentNode.nextNodes[0]
+		}
+	}
+
+	fmt.Printf("level count:%#v\n", levels)
+	t.Run("test", func(t *testing.T) {
+		got := 0
+		for _, l := range levels {
+			got += l
+		}
+
+		if got != int(length) {
+			t.Errorf("count of each level= %v, want %v", got, length)
+		}
+	})
+}
+
+func TestConcurrentSkipList_Sub(t *testing.T) {
+	skipList := NewConcurrentSkipList(12)
+	count := 100
+	indexes := make([]uint64, count)
+	for i := 0; i < count; i++ {
+		index := Hash([]byte(strconv.Itoa(i)))
+		indexes[i] = index
+		skipList.Insert(index, index)
+	}
+
+	sort.Slice(indexes, func(i, j int) bool {
+		return indexes[i] < indexes[j]
+	})
+
+	type args struct {
+		startIndex int32
+		length     int32
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{"test1", args{0, -1}, 0},
+		{"test2", args{-1, -1}, 0},
+		{"test3", args{105, 2}, 0},
+		{"test4", args{100, 2}, 0},
+		{"test5", args{99, 55}, 1},
+		{"test6", args{51, 55}, 49},
+		{"test7", args{0, 100}, 100},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := skipList.Sub(tt.args.startIndex, tt.args.length); len(got) != tt.want {
+				t.Errorf("Sub() = %v, want = %v", len(got), tt.want)
+			}
+		})
+	}
+
+	got := skipList.Sub(0, 100)
+	for i := 0; i < len(indexes); i++ {
+		t.Run(fmt.Sprintf("test%d", i+8), func(t *testing.T) {
+			if got[i].Index() != indexes[i] {
+				t.Errorf("Sub() = %v, want = %v", got[i].Index(), indexes[i])
+			}
+		})
+	}
+}
+
 func TestHash(t *testing.T) {
 	input := `Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.

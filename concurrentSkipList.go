@@ -35,7 +35,6 @@ func init() {
 
 type ConcurrentSkipList struct {
 	skipLists []*skipList
-	length    int32
 	level     int
 }
 
@@ -58,7 +57,6 @@ func NewConcurrentSkipList(level int) *ConcurrentSkipList {
 
 	return &ConcurrentSkipList{
 		skipLists: skipLists,
-		length:    0,
 		level:     level,
 	}
 }
@@ -134,6 +132,45 @@ func (s *ConcurrentSkipList) ForEach(f func(node *Node) bool) {
 			break
 		}
 	}
+}
+
+// Sub will return a slice the skip list who starts with startNumber.
+// The startNumber start with 0 as same as slice and maximum length is skip list's length.
+func (s *ConcurrentSkipList) Sub(startNumber int32, length int32) []*Node {
+	// Ignore invalid parameter.
+	if startNumber > s.Length() || startNumber < 0 || length <= 0 {
+		return nil
+	}
+
+	var result []*Node
+	var position, count int32 = 0, 0
+	for _, sl := range s.skipLists {
+		if l := sl.getLength(); l == 0 || position+l <= startNumber {
+			position += l
+			continue
+		}
+
+		nodes := sl.snapshot()
+		for _, node := range nodes {
+			if position < startNumber {
+				position++
+				continue
+			}
+
+			if count == length {
+				break
+			}
+
+			result = append(result, node)
+			count++
+		}
+
+		if count == length {
+			break
+		}
+	}
+
+	return result
 }
 
 // Locate which shard the given index belong to.

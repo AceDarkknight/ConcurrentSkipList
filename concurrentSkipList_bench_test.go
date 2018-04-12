@@ -71,8 +71,8 @@ func BenchmarkConcurrentSkipList_Search_10000000Elements(b *testing.B) {
 	}
 }
 
-func BenchmarkConcurrentSkipList_Search_12Level(b *testing.B) {
-	skipList := NewConcurrentSkipList(12)
+func BenchmarkConcurrentSkipList_Search_24Level(b *testing.B) {
+	skipList := NewConcurrentSkipList(24)
 	for i := 0; i < 10000000; i++ {
 		skipList.Insert(uint64(i), i)
 	}
@@ -86,8 +86,8 @@ func BenchmarkConcurrentSkipList_Search_12Level(b *testing.B) {
 	}
 }
 
-func BenchmarkConcurrentSkipList_Search_24Level(b *testing.B) {
-	skipList := NewConcurrentSkipList(24)
+func BenchmarkConcurrentSkipList_Search_32Level(b *testing.B) {
+	skipList := NewConcurrentSkipList(32)
 	for i := 0; i < 10000000; i++ {
 		skipList.Insert(uint64(i), i)
 	}
