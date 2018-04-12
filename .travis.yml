@@ -3,4 +3,5 @@ language: go
 go:
   - 1.9
 
-go test -v ./...
+script:
+  go test -v ./...
