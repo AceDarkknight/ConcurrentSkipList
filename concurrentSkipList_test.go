@@ -14,30 +14,24 @@ func TestNewConcurrentSkipList(t *testing.T) {
 	type args struct {
 		level int
 	}
-	type want struct {
-		length int32
-		level  int
-	}
 	tests := []struct {
 		name string
 		args args
-		want want
 	}{
-		{"test1", args{-1}, want{0, 32}},
-		{"test2", args{10}, want{0, 10}},
-		{"test3", args{64}, want{0, 32}},
+		{"test1", args{-1}},
+		{"test2", args{64}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewConcurrentSkipList(tt.args.level); got.Level() != tt.want.level || got.Length() != tt.want.length {
-				t.Errorf("NewConcurrentSkipList() = %#v, want %#v", got, tt.want)
+			if got, err := NewConcurrentSkipList(tt.args.level); got != nil || err == nil {
+				t.Errorf("NewConcurrentSkipList() = %#v,%#v", got, err)
 			}
 		})
 	}
 }
 
 func TestConcurrentSkipList_Search(t *testing.T) {
-	concurrentSkipList1 := NewConcurrentSkipList(16)
+	concurrentSkipList1, _ := NewConcurrentSkipList(16)
 
 	type args struct {
 		input uint64
@@ -100,7 +94,7 @@ func TestConcurrentSkipList_Search(t *testing.T) {
 		})
 	}
 
-	concurrentSkipList2 := NewConcurrentSkipList(8)
+	concurrentSkipList2, _ := NewConcurrentSkipList(8)
 	for i, v := range shardIndexes {
 		concurrentSkipList2.Insert(v, i)
 	}
@@ -115,7 +109,7 @@ func TestConcurrentSkipList_Search(t *testing.T) {
 }
 
 func TestConcurrentSkipList_Insert(t *testing.T) {
-	skipList := NewConcurrentSkipList(8)
+	skipList, _ := NewConcurrentSkipList(8)
 	type args struct {
 		index uint64
 	}
@@ -244,7 +238,7 @@ func TestConcurrentSkipList_Insert(t *testing.T) {
 }
 
 func TestConcurrentSkipList_Delete(t *testing.T) {
-	skipList := NewConcurrentSkipList(16)
+	skipList, _ := NewConcurrentSkipList(16)
 	skipList.Delete(uint64(1))
 	type args struct {
 		index uint64
@@ -341,7 +335,7 @@ func TestConcurrentSkipList_Delete(t *testing.T) {
 }
 
 func TestConcurrentSkipList_ForEach(t *testing.T) {
-	skipList := NewConcurrentSkipList(10)
+	skipList, _ := NewConcurrentSkipList(10)
 	indexes := make([]uint64, 0)
 	count := 10000
 	for i := 0; i < count; i++ {
@@ -367,7 +361,7 @@ func TestConcurrentSkipList_ForEach(t *testing.T) {
 }
 
 func TestConcurrentSkipList_Insert_Parallel(t *testing.T) {
-	skipList := NewConcurrentSkipList(10)
+	skipList, _ := NewConcurrentSkipList(10)
 	indexes := make([]uint64, 0)
 	count := 10000
 	var wg sync.WaitGroup
@@ -405,7 +399,7 @@ func TestConcurrentSkipList_Insert_Parallel(t *testing.T) {
 }
 
 func TestConcurrentSkipList_Delete_Parallel(t *testing.T) {
-	skipList := NewConcurrentSkipList(10)
+	skipList, _ := NewConcurrentSkipList(10)
 	indexes := make([]uint64, 0)
 	count := 10000
 	var wg sync.WaitGroup
@@ -456,7 +450,7 @@ func TestConcurrentSkipList_Delete_Parallel(t *testing.T) {
 }
 
 func TestConcurrentSkipList_ForEach_Parallel(t *testing.T) {
-	skipList := NewConcurrentSkipList(10)
+	skipList, _ := NewConcurrentSkipList(10)
 	indexes := make([]uint64, 0)
 	count := 10000
 	var wg sync.WaitGroup
@@ -514,16 +508,9 @@ func TestConcurrentSkipList_ForEach_Parallel(t *testing.T) {
 	})
 }
 
-func TestConcurrentSkipList_Length(t *testing.T) {
-	skipList := NewConcurrentSkipList(32)
-	for i := 0; i < 10000000; i++ {
-		skipList.Insert(uint64(i), i)
-	}
-}
-
 func TestConcurrentSkipList_Level(t *testing.T) {
-	skipList := NewConcurrentSkipList(16)
-	for i := 0; i < 10000000; i++ {
+	skipList, _ := NewConcurrentSkipList(16)
+	for i := 0; i < 100000; i++ {
 		index := Hash([]byte(strconv.Itoa(i)))
 		skipList.Insert(index, i)
 	}
@@ -556,7 +543,7 @@ func TestConcurrentSkipList_Level(t *testing.T) {
 }
 
 func TestConcurrentSkipList_Sub(t *testing.T) {
-	skipList := NewConcurrentSkipList(12)
+	skipList, _ := NewConcurrentSkipList(12)
 	count := 100
 	indexes := make([]uint64, count)
 	for i := 0; i < count; i++ {

@@ -18,7 +18,10 @@ And you can use the package now!
 ```go
 // Create a new skip list. The parameter is the level of the skip list.
 // Parameter must > 0 and <=32, if not, use the default value:32.
-skipList := ConcurrentSkipList.NewConcurrentSkipList(12)
+skipList,err := ConcurrentSkipList.NewConcurrentSkipList(12)
+if err != nil {
+    fmt.Println(err)
+}
 
 // Insert index and value. The index must uint64 and value is interface.
 skipList.Insert(uint64(1), 1)
@@ -43,7 +46,14 @@ skipList.ForEach(func(node *ConcurrentSkipList.Node) bool {
 	fmt.Printf("index:%v value:%v\n", node.Index(), node.Value())
 	return true
 })
+
+// Select top 10 nodes of skip list.
+nodes := skipList.Sub(0, 10)
 ```
+
+## TODO
+- [ ] Reduce memory.
+- [ ] Add reverse operation.
 
 ## References
 https://en.wikipedia.org/wiki/Skip_list

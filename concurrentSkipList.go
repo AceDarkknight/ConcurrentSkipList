@@ -4,6 +4,7 @@ Package ConcurrentSkipList provide an implementation of skip list. It's thread-s
 package ConcurrentSkipList
 
 import (
+	"errors"
 	"math"
 	"sync/atomic"
 
@@ -45,9 +46,9 @@ type ConcurrentSkipList struct {
 // N is the count of the skip list which you can estimate. PROBABILITY is 0.25 in this case.
 // For example, if you expect the skip list contains 10000000 elements, then N = 10000000, L(N) ≈ 12.
 // After initialization, the head field's level equal to level parameter and point to tail field.
-func NewConcurrentSkipList(level int) *ConcurrentSkipList {
+func NewConcurrentSkipList(level int) (*ConcurrentSkipList, error) {
 	if level <= 0 || level > MAX_LEVEL {
-		level = MAX_LEVEL
+		return nil, errors.New("invalid level, level must between 1 to 32")
 	}
 
 	skipLists := make([]*skipList, SHARDS)
@@ -58,7 +59,7 @@ func NewConcurrentSkipList(level int) *ConcurrentSkipList {
 	return &ConcurrentSkipList{
 		skipLists: skipLists,
 		level:     level,
-	}
+	}, nil
 }
 
 // Level will return the level of skip list.
