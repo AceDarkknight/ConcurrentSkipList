@@ -1,5 +1,7 @@
 # ConcurrentSkipList
 [![Build Status](https://travis-ci.org/AceDarkknight/ConcurrentSkipList.svg?branch=master)](https://travis-ci.org/AceDarkknight/ConcurrentSkipList)
+[![Maintainability](https://api.codeclimate.com/v1/badges/1955c229bfe0ba0a5134/maintainability)](https://codeclimate.com/github/AceDarkknight/ConcurrentSkipList/maintainability)
+![license](https://img.shields.io/github/license/mashape/apistatus.svg)
 
 A light, high-performance, concurrent, thread-safe skip list implementation written in Golang.
 
