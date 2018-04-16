@@ -25,6 +25,20 @@ func BenchmarkConcurrentSkipList_Insert_Randomly(b *testing.B) {
 		skipList.Insert(index, index)
 	}
 }
+func BenchmarkConcurrentSkipList_Delete(b *testing.B) {
+	skipList, _ := NewConcurrentSkipList(12)
+	for i := 0; i < 10000000; i++ {
+		skipList.Insert(uint64(i), i)
+	}
+
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		// t := rand.Intn(b.N)
+		// index := Hash([]byte(strconv.Itoa(t)))
+		skipList.Delete(uint64(i))
+	}
+}
 
 func BenchmarkConcurrentSkipList_Search_100000Elements(b *testing.B) {
 	skipList, _ := NewConcurrentSkipList(12)

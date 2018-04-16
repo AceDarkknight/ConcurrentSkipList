@@ -122,9 +122,16 @@ func (s *skipList) insert(index uint64, value interface{}) {
 
 		// Secondly, previous nodes point to new value.
 		previousNodes[i].nextNodes[i] = newNode
+
+		// Finally, in order to release the slice, point to nil.
+		previousNodes[i] = nil
 	}
 
 	atomic.AddInt32(&s.length, 1)
+
+	for i := len(newNode.nextNodes); i < len(previousNodes); i++ {
+		previousNodes[i] = nil
+	}
 }
 
 // delete will find the index is existed or not firstly.
@@ -142,9 +149,14 @@ func (s *skipList) delete(index uint64) {
 		for i := 0; i < len(currentNode.nextNodes); i++ {
 			previousNodes[i].nextNodes[i] = currentNode.nextNodes[i]
 			currentNode.nextNodes[i] = nil
+			previousNodes[i] = nil
 		}
 
 		atomic.AddInt32(&s.length, -1)
+	}
+
+	for i := len(currentNode.nextNodes); i < len(previousNodes); i++ {
+		previousNodes[i] = nil
 	}
 }
 
