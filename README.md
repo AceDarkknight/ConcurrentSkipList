@@ -20,8 +20,8 @@ And you can use the package now!
 - **Usage**
 ```go
 // Create a new skip list. The parameter is the level of the skip list.
-// Parameter must > 0 and <=32, if not, use the default value:32.
-skipList,err := ConcurrentSkipList.NewConcurrentSkipList(12)
+// Parameter must > 0 and <=32, if not, err is not nil.
+skipList, err := ConcurrentSkipList.NewConcurrentSkipList(12)
 if err != nil {
     fmt.Println(err)
 }
