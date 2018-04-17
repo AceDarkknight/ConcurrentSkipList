@@ -1,7 +1,7 @@
 # ConcurrentSkipList
 [![Build Status](https://travis-ci.org/AceDarkknight/ConcurrentSkipList.svg?branch=master)](https://travis-ci.org/AceDarkknight/ConcurrentSkipList)
 [![Maintainability](https://api.codeclimate.com/v1/badges/1955c229bfe0ba0a5134/maintainability)](https://codeclimate.com/github/AceDarkknight/ConcurrentSkipList/maintainability)
-[![license](https://img.shields.io/github/license/mashape/apistatus.svg)
+![license](https://img.shields.io/github/license/mashape/apistatus.svg)
 [![Coverage Status](https://coveralls.io/repos/github/AceDarkknight/ConcurrentSkipList/badge.svg?branch=master)](https://coveralls.io/github/AceDarkknight/ConcurrentSkipList?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/AceDarkknight/ConcurrentSkipList)](https://goreportcard.com/report/github.com/AceDarkknight/ConcurrentSkipList)
 
