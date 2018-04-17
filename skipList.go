@@ -14,9 +14,10 @@ type skipList struct {
 	mutex  sync.RWMutex
 }
 
+// newSkipList will create a concurrent skip list with given level.
 func newSkipList(level int) *skipList {
 	head := newNode(0, nil, level)
-	var tail *Node = nil
+	var tail *Node
 	for i := 0; i < len(head.nextNodes); i++ {
 		head.nextNodes[i] = tail
 	}

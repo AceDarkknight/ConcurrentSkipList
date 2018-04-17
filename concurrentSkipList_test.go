@@ -52,7 +52,7 @@ func TestConcurrentSkipList_Search(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got, existed := concurrentSkipList1.Search(tt.args.input); existed != tt.want.existed || got != nil {
-				t.Errorf("Search() = value value:%v existed:%v, want value:%v existed:%v", got, existed, tt.want.value, tt.want.existed)
+				t.Errorf("Search() = value:%v existed:%v, want value:%v existed:%v", got, existed, tt.want.value, tt.want.existed)
 			}
 		})
 	}
@@ -73,7 +73,7 @@ func TestConcurrentSkipList_Search(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got, existed := concurrentSkipList1.Search(tt.args.input); existed != tt.want.existed || got.value != tt.want.value {
-				t.Errorf("Search() = value value:%v existed:%v, want value:%v existed:%v", got.Value(), existed, tt.want.value, tt.want.existed)
+				t.Errorf("Search() = value:%v existed:%v, want value:%v existed:%v", got.Value(), existed, tt.want.value, tt.want.existed)
 			}
 		})
 	}
@@ -102,7 +102,7 @@ func TestConcurrentSkipList_Search(t *testing.T) {
 	for i, v := range shardIndexes {
 		t.Run(fmt.Sprintf("test%d", i+6), func(t *testing.T) {
 			if got, existed := concurrentSkipList2.Search(v); !existed || got.Value() != i {
-				t.Errorf("Search() = value value:%v existed:%v, want value:%v", got.Value(), existed, i)
+				t.Errorf("Search() = value:%v existed:%v, want value:%v", got.Value(), existed, i)
 			}
 		})
 	}
@@ -222,7 +222,7 @@ func TestConcurrentSkipList_Insert(t *testing.T) {
 	skipList.Insert(uint64(1<<61), uint64(1<<61))
 	skipList.Insert(uint64(1<<62), uint64(1<<62))
 
-	var lastIndex uint64 = 0
+	var lastIndex uint64
 	skipList.ForEach(func(node *Node) bool {
 		t.Run("test sequence", func(t *testing.T) {
 			t.Logf("index:%v value:%v", node.Index(), node.Value())

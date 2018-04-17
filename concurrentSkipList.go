@@ -34,13 +34,14 @@ func init() {
 	}
 }
 
+// ConcurrentSkipList is a struct contains a slice of concurrent skip list.
 type ConcurrentSkipList struct {
 	skipLists []*skipList
 	level     int
 }
 
 // NewConcurrentSkipList will create a new concurrent skip list with given level.
-// Level must between 1 to 32. If not, the level will set as 32.
+// Level must between 1 to 32. If not, will return an error.
 // To determine the level, you can see the paper ftp://ftp.cs.umd.edu/pub/skipLists/skiplists.pdf.
 // A simple way to determine the level is L(N) = log(1/PROBABILITY)(N).
 // N is the count of the skip list which you can estimate. PROBABILITY is 0.25 in this case.
@@ -51,7 +52,7 @@ func NewConcurrentSkipList(level int) (*ConcurrentSkipList, error) {
 		return nil, errors.New("invalid level, level must between 1 to 32")
 	}
 
-	skipLists := make([]*skipList, SHARDS)
+	skipLists := make([]*skipList, SHARDS, SHARDS)
 	for i := 0; i < SHARDS; i++ {
 		skipLists[i] = newSkipList(level)
 	}
@@ -69,7 +70,7 @@ func (s *ConcurrentSkipList) Level() int {
 
 // Length will return the length of skip list.
 func (s *ConcurrentSkipList) Length() int32 {
-	var length int32 = 0
+	var length int32
 	for _, sl := range s.skipLists {
 		length += sl.getLength()
 	}
