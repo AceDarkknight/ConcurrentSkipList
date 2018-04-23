@@ -16,7 +16,6 @@ go get github.com/AceDarkknight/ConcurrentSkipList
 ```go
 import "github.com/AceDarkknight/ConcurrentSkipList"
 ```
-And you can use the package now!
 
 - **Usage**
 ```go
